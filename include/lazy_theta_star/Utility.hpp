@@ -46,12 +46,3 @@ struct Vector
         return {x / k, y / k, z / k};
     }
 };
-
-using Vectori = Vector<int>;
-using Vectorf = Vector<float>;
-
-float Dist(Vectorf v1, Vectorf v2)
-{
-    Vectorf v(v1.x-v2.x, v1.y-v2.y, v1.z-v2.z);
-    return std::sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
-}

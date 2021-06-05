@@ -4,7 +4,7 @@
 #include <tuple>
 #include <array>
 
-#include <lazy_theta_star/Adaptor.hpp>
+#include <Adaptor.hpp>
 
 #include <ros/ros.h>
 #include <nav_msgs/Odometry.h>

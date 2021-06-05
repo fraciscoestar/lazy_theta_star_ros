@@ -18,6 +18,9 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
+find_package(gazebo_ros REQUIRED)
+
+link_directories(${GAZEBO_LIBRARY_DIRS})
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -106,6 +109,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
+  DEPENDS
+    roscpp
+    gazebo_ros
   # INCLUDE_DIRS include
   # LIBRARIES lazy_theta_star
   # CATKIN_DEPENDS roscpp rospy std_msgs nav_msgs geometry_msgs
@@ -119,14 +125,18 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
+  ${Boost_INCLUDE_DIR}
   ${catkin_INCLUDE_DIRS}
-  include/
+  /usr/include/gazebo-7
+  /usr/include/ignition/math2
+  /usr/include/sdformat-4.0
+  include/lazy_theta_star
 )
 
 ## Declare a C++ library
 add_library(${PROJECT_NAME}
    src/lazy_theta_star.cpp
-   #src/GazeboTools.cpp
+   src/GazeboTools.cpp
 )
 
 ## Add cmake target dependencies of the library
@@ -152,8 +162,7 @@ add_executable(lazy src/lazy_theta_star.cpp)
 ## Specify libraries to link a library or executable target against
 target_link_libraries(lazy
   ${catkin_LIBRARIES}
-  # ${GAZEBO_LIBRARIES}
-  # ${PROJECT_NAME}
+  ${GAZEBO_LIBRARIES}
 )
 
 #############

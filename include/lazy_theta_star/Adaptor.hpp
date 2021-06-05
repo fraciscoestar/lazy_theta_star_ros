@@ -1,9 +1,11 @@
 #pragma once
 
-#include <lazy_theta_star/Pathfinding.hpp>
-#include <lazy_theta_star/Utility.hpp>
+#include <Pathfinding.hpp>
+#include <Utility.hpp>
 
 using namespace std;
+using Vectori = Vector<int>;
+using Vectorf = Vector<float>;
 
 // Este adaptador es para una grid 3D y 2D.
 class Adaptor : public Pathfinding::PathfindingAdaptor
@@ -120,5 +122,11 @@ private:
     const Vectori mMapSize;
 
     const function<bool(const Vectori&)> mIsTraversable;
+
+    float Dist(Vectorf v1, Vectorf v2) const
+    {
+        Vectorf v(v1.x-v2.x, v1.y-v2.y, v1.z-v2.z);
+        return std::sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
+    }
 };
 

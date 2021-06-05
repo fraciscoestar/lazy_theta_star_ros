@@ -6,6 +6,7 @@
 #include <string>
 
 using namespace std;
+using Vectori = Vector<int>;
 
 namespace gazebo
 {
