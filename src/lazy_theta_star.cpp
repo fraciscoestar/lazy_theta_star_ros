@@ -40,14 +40,17 @@ int main(int argc, char *argv[])
 
     array<array<array<char, mapSizeZ>, mapSizeY>, mapSizeX> map;
 
+////////////////////////////////////////////////////////////////////////////////
     fstream file("/home/fraci/catkin_ws/src/lazy_theta_star/worlds/map.csv");
-
 
     if(!file.is_open())
     {
         printf("Error al abrir el archivo\n");
         exit(-1);
     }
+
+    string sizeStr;
+    getline(file, sizeStr); // Descarta la primera línea.
 
     for(int row = 0; row < mapSizeY; ++row)
     {
@@ -70,36 +73,37 @@ int main(int argc, char *argv[])
             map[col][row][0] -= '0';
         }
     }
+////////////////////////////////////////////////////////////////////////////////
 
-    Publisher pub = nh.advertise<lazy_theta_star::map_msg>("/map_topic", 1000);
-    Rate loop_rate(1);
+    // Publisher pub = nh.advertise<lazy_theta_star::map_msg>("/map_topic", 1000);
+    // Rate loop_rate(1);
 
-    lazy_theta_star::map_msg mapMsg;
-    mapMsg.numObstacles = 0;
-    mapMsg.obstacles.reserve(mapSizeX*mapSizeY*mapSizeZ/2);
-    mapMsg.path.reserve(100);
+    // lazy_theta_star::map_msg mapMsg;
+    // mapMsg.numObstacles = 0;
+    // mapMsg.obstacles.reserve(mapSizeX*mapSizeY*mapSizeZ/2);
+    // mapMsg.path.reserve(100);
     //mapMsg.mapSize = {mapSizeX, mapSizeY, mapSizeZ};
 
-    int i = 0;
-    for (size_t z = 0; z < mapSizeZ; z++)
-    {
-        for (size_t y = 0; y < mapSizeY; y++)
-        {
-            for (size_t x = 0; x < mapSizeX; x++)
-            {
-                if(map[x][y][z] == 1)    
-                {
-                    mapMsg.obstacles[i].x = x;
-                    mapMsg.obstacles[i].y = y;
-                    mapMsg.obstacles[i].z = z;
-                    i++;
-                    mapMsg.numObstacles++;
-                }        
-            }
+    // int i = 0;
+    // for (size_t z = 0; z < mapSizeZ; z++)
+    // {
+    //     for (size_t y = 0; y < mapSizeY; y++)
+    //     {
+    //         for (size_t x = 0; x < mapSizeX; x++)
+    //         {
+    //             if(map[x][y][z] == 1)    
+    //             {
+    //                 // mapMsg.obstacles[i].x = x;
+    //                 // mapMsg.obstacles[i].y = y;
+    //                 // mapMsg.obstacles[i].z = z;
+    //                 // i++;
+    //                 // mapMsg.numObstacles++;
+    //             }        
+    //         }
                     
-        }
+    //     }
             
-    }
+    // }
     
 
     // int x_s, y_s, z_s, x_e, y_e, z_e;
@@ -167,14 +171,14 @@ int main(int argc, char *argv[])
     map[startPoint.x][startPoint.y][startPoint.z] = 'S';
     map[endPoint.x][endPoint.y][endPoint.z] = 'E';
 
-    mapMsg.pathSize = path.size();
+    // mapMsg.pathSize = path.size();
 
     for (size_t i = 0; i < path.size(); i++)
     {
         map[path[i].x][path[i].y][path[i].z] = i + '1';
-        mapMsg.path[i].x = path[i].x;
-        mapMsg.path[i].y = path[i].y;
-        mapMsg.path[i].z = path[i].z;
+        // mapMsg.path[i].x = path[i].x;
+        // mapMsg.path[i].y = path[i].y;
+        // mapMsg.path[i].z = path[i].z;
     }
 
     for (size_t i = 0; i < mapSizeY; i++)
@@ -193,12 +197,15 @@ int main(int argc, char *argv[])
 
     printf("\nFinished!\n");
 
-    while (pub.getNumSubscribers() == 0)
-    {
-        loop_rate.sleep();
-    }
-    
-    pub.publish(mapMsg);
+    // FilesHandler fh;
+    // vector<Vector<int>> obstacles = fh.GetObstaclesFromCSV();
+
+    // for(auto obstacle : obstacles)
+    // {
+    //     //CreateCube(obstacle, i, _parent);
+    //     cout << "Adding box at" << obstacle.x << "X " << obstacle.y << "Y " << obstacle.z << "Z" << std::endl;
+    //     //i++;
+    // }
 
     spin();
     

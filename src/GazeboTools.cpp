@@ -20,54 +20,25 @@ namespace gazebo
 
         void Load(physics::WorldPtr _parent, sdf::ElementPtr /*_sdf*/)
         {
-            int argc = 1;
-            char *argv[] = {"gazebo"};
+            FilesHandler fh;
+            vector<Vectori> obstacles = fh.GetObstaclesFromCSV();
 
-            ros::init(argc, argv, "gazebo_subscriber");
-            ros::NodeHandle nh;
-
-            ros::Subscriber subs = nh.subscribe<lazy_theta_star::map_msg>("map_topic", 1, MapCallback);
-
-            for (size_t i = 0; i < numObstacles; i++)
+            int i = 0;
+            for(auto obstacle : obstacles)
             {
-                CreateCube(obstacles[i], i, _parent);
+                CreateCube(obstacle, i, _parent);
+                i++;
             }
-
-            // CreateCube({0,0,0}, 0, _parent);
-            // CreateCube({2,1,1}, 1, _parent);
-            // CreateCube({0,6,5}, 2, _parent);
         }
 
     private:
-
-        static vector<Vectori> obstacles;
-        static vector<Vectori> path;
-        static int numObstacles;
-        static int pathSize;
-
-        static void MapCallback(const lazy_theta_star::map_msg::ConstPtr& msg)
-        {
-            numObstacles = msg->numObstacles;
-            pathSize = msg->pathSize;
-
-            for (size_t i = 0; i < msg->numObstacles; i++)
-            {
-                obstacles.push_back({(int)msg->obstacles[i].x, (int)msg->obstacles[i].y, (int)msg->obstacles[i].z});
-            }
-
-            for (size_t i = 0; i < msg->pathSize; i++)
-            {
-                path.push_back({(int)msg->path[i].x, (int)msg->path[i].y, (int)msg->path[i].z});
-            }
-            
-        }
 
         void CreateCube(Vectori pos, int iD, physics::WorldPtr _parent)
         {
             sdf::SDF boxSDF;
 
             string str = 
-                "<sdf version='1.4'>\
+                "<sdf version='1.6'>\
                    <model name='box'>\
                     <pose>" + to_string(pos.x) + (string)" " + to_string(pos.y) + (string)" " + to_string(pos.z+0.5f) + (string)" 0 0 0</pose>\
                     <static>true</static>\
