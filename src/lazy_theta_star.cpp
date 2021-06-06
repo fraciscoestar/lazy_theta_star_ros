@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
     int mapSizeZ = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
-    fstream file("/home/fraci/catkin_ws/src/lazy_theta_star/worlds/map.csv");
+    fstream file("/home/fraci/catkin_ws/src/lazy_theta_star/worlds/map_lazy_theta.csv");
 
     if(!file.is_open())
     {
@@ -68,27 +68,37 @@ int main(int argc, char *argv[])
     Vectori mapSize = {mapSizeX, mapSizeY, mapSizeZ};
     array<array<array<char, 100>, 100>, 50> map;
 
-    for(int row = 0; row < mapSizeY; ++row)
+    for (int depth = 0; depth < mapSizeZ; depth++)
     {
-        string line;
-        getline(file, line);
-        if ( !file.good() ) 
-            break;
-
-        stringstream iss(line);  
-
-        for (int col = 0; col < mapSizeX; ++col)
+        if(depth != 0) // No es el primer nivel.
         {
-            std::string val;
-            std::getline(iss, val, ',');
-            if ( !iss.good() ) 
+            string str;
+            getline(file, str); // Descarta la línea vacía.
+        }
+
+        for(int row = 0; row < mapSizeY; ++row)
+        {
+            string line;
+            getline(file, line);
+            if ( !file.good() ) 
                 break;
 
-            std::stringstream convertor(val);
-            convertor >> map[col][row][0];
-            map[col][row][0] -= '0';
-        }
+            stringstream iss(line);  
+
+            for (int col = 0; col < mapSizeX; ++col)
+            {
+                std::string val;
+                std::getline(iss, val, ',');
+                if ( !iss.good() ) 
+                    break;
+
+                std::stringstream convertor(val);
+                convertor >> map[col][row][depth];
+                map[col][row][depth] -= '0';
+            }
+        }      
     }
+    
 ////////////////////////////////////////////////////////////////////////////////
 
     Vectori startPoint = {-1,-1,-1};
