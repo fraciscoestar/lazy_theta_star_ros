@@ -8,6 +8,9 @@
 #include <tuple>
 #include <array>
 
+#include <stdio.h>
+
+
 template<typename T>
 struct Vector
 {
@@ -59,7 +62,7 @@ public:
     {
         std::vector<Vector<int>> obstacles;
 
-        std::fstream file("/home/fraci/catkin_ws/src/lazy_theta_star/worlds/map_lazy_theta.csv");
+        std::fstream file("/home/fraci/catkin_ws/src/lazy_theta_star/worlds/map.csv");
 
         if(!file.is_open())
         {
@@ -119,6 +122,105 @@ public:
         
 
         return obstacles;
+    }
+
+    void WritePathToCSV(std::vector<Vector<int>> path)
+    {
+        std::string filePath = "/home/fraci/catkin_ws/src/lazy_theta_star/worlds/path.csv";
+
+        try
+        {
+            remove(&filePath[0]);
+        }
+        catch(const std::exception& e)
+        {
+            std::cout << "El fichero de camino no existe. Creando archivo..." << std::endl;
+        }
+        
+        std::fstream fs;
+        fs.open(filePath, std::fstream::out);
+
+        int pathSize = path.size();
+        fs << std::to_string(pathSize) << "," << std::endl;
+
+        for(auto point : path)
+        {
+            fs << std::to_string(point.x) << ", " << std::to_string(point.y) << ", " << std::to_string(point.z) << "," << std::endl;
+        }
+
+        fs.close();
+    }
+
+    std::vector<Vector<int>> GetPathFromCSV()
+    {
+        std::vector<Vector<int>> path;
+        int pathSize = 0;
+
+        std::fstream file("/home/fraci/catkin_ws/src/lazy_theta_star/worlds/path.csv");
+
+        if(!file.is_open())
+        {
+            std::cout << "No se pudo abrir el camino!" << std::endl;
+            exit(-1);
+        }
+
+        std::string sizeStr;
+        std::getline(file, sizeStr);
+        std::stringstream sstream(sizeStr);
+        
+        std::string val;
+        std::getline(sstream, val, ',');
+
+        std::stringstream convertor(val);
+        convertor >> pathSize;     
+
+        //path.reserve(pathSize);  
+
+        int i = 0;
+        
+        for (size_t i = 0; i < pathSize; i++)
+        {
+            std::string line;
+            std::getline(file, line);
+            if(!file.good())
+                break;
+
+            std::stringstream iss(line);
+            Vector<int> point;
+
+            for (size_t j = 0; j < 3; j++)
+            {
+                std::string val;
+                std::getline(iss, val, ',');
+                if(!iss.good())
+                    break;
+
+                std::stringstream convertor(val);
+                //convertor >> val;
+
+                if(j==0)
+                {
+                    convertor >> point.x;
+                    // std::cout << path[i].x << std::endl;
+                }
+                else if(j==1)
+                {
+                    convertor >> point.y;
+                    // std::cout << path[i].y << std::endl;
+                }
+                else if(j==2)
+                {
+                    convertor >> point.z;
+                    // std::cout << path[i].z << std::endl;
+                }
+
+                
+            }
+
+            path.push_back(point);
+        }        
+
+        return path;
     }
 
 private:

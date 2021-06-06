@@ -36,15 +36,15 @@ public:
         Vectori l1 = IdToPos(n1);
         Vectori l2 = IdToPos(n2);
 
-        Vectorf pos = (Vectorf)l1;
+        Vectorf pos = (Vectorf)l1 + Vectorf({0.5f, 0.5f, 0.5f});
         Vectori dir = l2 - l1;
 
-        uint16_t nIter = 100;
+        uint16_t nIter = 200;
 
         Vectorf step = {1.0f/nIter, 1.0f/nIter, 1.0f/nIter};
 
         // cout << "steps: " << step.x << "," << step.y << "," << step.z << endl;
-        // cout << "dir: " << dir.x << "," << dir.y << "," << dir.z << endl;
+        cout << "dir: " << dir.x << "," << dir.y << "," << dir.z << endl;
 
         for (size_t i = 0; i < nIter; i++)
         {
@@ -52,14 +52,11 @@ public:
             pos.y += (float)dir.y * step.y;
             pos.z += (float)dir.z * step.z;
 
-            // cout << "Iteracion:" << i << " Pos:" << pos.x << "," << pos.y << "," << pos.z << endl;
-
-            if(!IsTraversable((Vectori)pos))
+            if(!IsTraversable(Vectori(pos)))
             {
-                // cout << "La pos" << ((Vectori)pos).x << "," << ((Vectori)pos).y << "," << ((Vectori)pos).z << " no es transitable. CHECK:" << mIsTraversable((Vectori)pos) << " DOUBLE CHECK:" << IsTraversable((Vectori)pos) << endl;
                 return false;
             }
-                
+            
         }
         
         return true;
@@ -119,8 +116,9 @@ public:
     }
 
 private:
-    const Vectori mMapSize;
+    static constexpr const float EPSILON = 0.00001f;
 
+    const Vectori mMapSize;
     const function<bool(const Vectori&)> mIsTraversable;
 
     float Dist(Vectorf v1, Vectorf v2) const
