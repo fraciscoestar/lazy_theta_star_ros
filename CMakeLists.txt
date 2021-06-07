@@ -14,12 +14,13 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   geometry_msgs
   gazebo_ros
-  message_generation
+  # message_generation
 )
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 find_package(gazebo_ros REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 link_directories(${GAZEBO_LIBRARY_DIRS})
 
@@ -54,12 +55,12 @@ link_directories(${GAZEBO_LIBRARY_DIRS})
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-add_message_files(
-  FILES
-  map_msg.msg
+# add_message_files(
+#   FILES
+#   map_msg.msg
 #   Message1.msg
 #   Message2.msg
-)
+# )
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -76,10 +77,10 @@ add_message_files(
 # )
 
 ## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-  geometry_msgs
-)
+# generate_messages(
+#   DEPENDENCIES
+#   geometry_msgs
+# )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -115,7 +116,7 @@ catkin_package(
     roscpp
     gazebo_ros
     geometry_msgs
-    message_runtime
+    # message_runtime
   # INCLUDE_DIRS include
   # LIBRARIES lazy_theta_star
   # CATKIN_DEPENDS roscpp rospy std_msgs nav_msgs geometry_msgs
@@ -131,6 +132,7 @@ catkin_package(
 include_directories(
   ${Boost_INCLUDE_DIR}
   ${catkin_INCLUDE_DIRS}
+  ${YAML_INCLUDE_DIRS}
   /usr/include/gazebo-7
   /usr/include/ignition/math2
   /usr/include/sdformat-4.0
@@ -167,6 +169,7 @@ add_executable(lazy src/lazy_theta_star.cpp)
 target_link_libraries(lazy
   ${catkin_LIBRARIES}
   ${GAZEBO_LIBRARIES}
+  yaml-cpp
 )
 
 #############

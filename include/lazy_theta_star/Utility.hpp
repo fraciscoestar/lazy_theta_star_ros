@@ -9,7 +9,8 @@
 #include <array>
 
 #include <stdio.h>
-
+#include <yaml-cpp/yaml.h>
+#include <ros/package.h>
 
 template<typename T>
 struct Vector
@@ -43,6 +44,14 @@ struct Vector
         return {x + other.x, y + other.y, z + other.z};
     }
 
+    bool operator ==(const Vector<T>& other) const
+    {
+        if(x == other.x && y == other.y && z == other.z)
+            return true;
+        else
+            return false;
+    }
+
     Vector<T> operator *(float k) const
     {
         return {x * k, y * k, z * k};
@@ -62,7 +71,7 @@ public:
     {
         std::vector<Vector<int>> obstacles;
 
-        std::fstream file("/home/fraci/catkin_ws/src/lazy_theta_star/worlds/map.csv");
+        std::fstream file(ros::package::getPath("lazy_theta_star") + "/worlds/" + RetrieveMapName());
 
         if(!file.is_open())
         {
@@ -126,7 +135,7 @@ public:
 
     void WritePathToCSV(std::vector<Vector<int>> path)
     {
-        std::string filePath = "/home/fraci/catkin_ws/src/lazy_theta_star/worlds/path.csv";
+        std::string filePath = ros::package::getPath("lazy_theta_star") + "/worlds/path.csv";
 
         try
         {
@@ -156,7 +165,7 @@ public:
         std::vector<Vector<int>> path;
         int pathSize = 0;
 
-        std::fstream file("/home/fraci/catkin_ws/src/lazy_theta_star/worlds/path.csv");
+        std::fstream file(ros::package::getPath("lazy_theta_star") + "/worlds/" + RetrieveMapName());
 
         if(!file.is_open())
         {
@@ -221,6 +230,24 @@ public:
         }        
 
         return path;
+    }
+
+    YAML::Node GetConfig()
+    {
+        return YAML::LoadFile(ros::package::getPath("lazy_theta_star") + "/config/config.yaml");
+    }
+
+    std::string RetrieveMapName()
+    {
+        YAML::Node node = GetConfig();
+        std::string mapName = "";
+
+        if(node["LTS"]["map"])
+            mapName = node["LTS"]["map"].as<std::string>();
+        else
+            std::cout << "Hubo un error leyendo el nombre del mapa!" << std::endl;
+
+        return mapName;
     }
 
 private:

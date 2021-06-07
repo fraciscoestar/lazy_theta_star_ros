@@ -44,7 +44,7 @@ public:
         Vectorf step = {1.0f/nIter, 1.0f/nIter, 1.0f/nIter};
 
         // cout << "steps: " << step.x << "," << step.y << "," << step.z << endl;
-        cout << "dir: " << dir.x << "," << dir.y << "," << dir.z << endl;
+        //cout << "dir: " << dir.x << "," << dir.y << "," << dir.z << endl;
 
         for (size_t i = 0; i < nIter; i++)
         {
@@ -56,7 +56,6 @@ public:
             {
                 return false;
             }
-            
         }
         
         return true;
@@ -116,7 +115,7 @@ public:
     }
 
 private:
-    static constexpr const float EPSILON = 0.00001f;
+    static constexpr const float EPSILON = 0.001f;
 
     const Vectori mMapSize;
     const function<bool(const Vectori&)> mIsTraversable;

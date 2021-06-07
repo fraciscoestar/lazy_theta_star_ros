@@ -7,9 +7,9 @@
 #include <Adaptor.hpp>
 
 #include <ros/ros.h>
+#include <ros/package.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Pose.h>
-#include "lazy_theta_star/map_msg.h"
 
 using namespace std;
 using namespace ros;
@@ -37,8 +37,13 @@ int main(int argc, char *argv[])
     int mapSizeY = 0;
     int mapSizeZ = 0;
 
+    FilesHandler fh;
+
+    //cout << package::getPath("lazy_theta_star") << endl;
+    string mapName = fh.RetrieveMapName();
+
 ////////////////////////////////////////////////////////////////////////////////
-    fstream file("/home/fraci/catkin_ws/src/lazy_theta_star/worlds/map_lazy_theta.csv");
+    fstream file(package::getPath("lazy_theta_star") + "/worlds/" + mapName);
 
     if(!file.is_open())
     {
@@ -68,7 +73,7 @@ int main(int argc, char *argv[])
     Vectori mapSize = {mapSizeX, mapSizeY, mapSizeZ};
     array<array<array<char, 100>, 100>, 50> map;
 
-    for (int depth = 0; depth < mapSizeZ; depth++)
+    for (int depth = 0; depth < mapSizeZ; ++depth)
     {
         if(depth != 0) // No es el primer nivel.
         {
@@ -100,6 +105,29 @@ int main(int argc, char *argv[])
     }
     
 ////////////////////////////////////////////////////////////////////////////////
+
+    // for(size_t t = 0; t < mapSizeX; t++) //FIX
+    // {
+    //     printf("%ld", t);
+    // }
+    // printf("\n\n");
+
+    for (size_t i = 0; i < mapSizeY; i++)
+    {
+        //cout << to_string(i);
+        printf("%ld\t", i);
+
+        for (size_t j = 0; j < mapSizeX; j++)
+        {
+            if(map[j][i][0] == 1)
+                printf("%c", '#');
+            else if(map[j][i][0] == 0)
+                printf("%c", ' ');
+            else
+                printf("%c", map[j][i][0]);
+        }
+        printf("\n");
+    }
 
     Vectori startPoint = {-1,-1,-1};
     Vectori endPoint = {-1,-1,-1};
@@ -162,7 +190,7 @@ int main(int argc, char *argv[])
         path.erase(path.begin());
     }
 
-    if(path.empty())
+    if(path.empty() && !adaptor.LineOfSight(adaptor.PosToId(startPoint), adaptor.PosToId(endPoint)))
     {
         cout << "No se encontró un camino!" << endl;
         exit(-1);
@@ -193,8 +221,6 @@ int main(int argc, char *argv[])
     printf("\nFinished!\n");
 
     
-
-    FilesHandler fh;
     vector<Vectori> fullPath;
 
     fullPath.push_back(startPoint);

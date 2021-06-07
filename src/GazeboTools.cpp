@@ -3,7 +3,6 @@
 #include <gazebo/gazebo.hh>
 
 #include <ros/ros.h>
-#include "lazy_theta_star/map_msg.h"
 
 #include <Utility.hpp>
 #include <string>
