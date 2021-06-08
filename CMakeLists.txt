@@ -19,8 +19,8 @@ find_package(catkin REQUIRED COMPONENTS
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
+# find_package(yaml-cpp REQUIRED)
 find_package(gazebo_ros REQUIRED)
-find_package(yaml-cpp REQUIRED)
 
 link_directories(${GAZEBO_LIBRARY_DIRS})
 
@@ -169,7 +169,7 @@ add_executable(lazy src/lazy_theta_star.cpp)
 target_link_libraries(lazy
   ${catkin_LIBRARIES}
   ${GAZEBO_LIBRARIES}
-  yaml-cpp
+  # yaml-cpp
 )
 
 #############

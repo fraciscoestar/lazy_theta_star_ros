@@ -9,7 +9,7 @@
 #include <array>
 
 #include <stdio.h>
-#include <yaml-cpp/yaml.h>
+// #include <yaml-cpp/yaml.h>
 #include <ros/package.h>
 
 template<typename T>
@@ -232,22 +232,23 @@ public:
         return path;
     }
 
-    YAML::Node GetConfig()
-    {
-        return YAML::LoadFile(ros::package::getPath("lazy_theta_star") + "/config/config.yaml");
-    }
+    // YAML::Node GetConfig()
+    // {
+    //     return YAML::LoadFile(ros::package::getPath("lazy_theta_star") + "/config/config.yaml");
+    // }
 
     std::string RetrieveMapName()
     {
-        YAML::Node node = GetConfig();
-        std::string mapName = "";
+        return "map_lazy_theta.csv";
+        // YAML::Node node = GetConfig();
+        // std::string mapName = "";
 
-        if(node["LTS"]["map"])
-            mapName = node["LTS"]["map"].as<std::string>();
-        else
-            std::cout << "Hubo un error leyendo el nombre del mapa!" << std::endl;
+        // if(node["LTS"]["map"])
+        //     mapName = node["LTS"]["map"].as<std::string>();
+        // else
+        //     std::cout << "Hubo un error leyendo el nombre del mapa!" << std::endl;
 
-        return mapName;
+        // return mapName;
     }
 
 private:

@@ -23,22 +23,25 @@ namespace gazebo
             vector<Vectori> obstacles = fh.GetObstaclesFromCSV();
             vector<Vectori> path = fh.GetPathFromCSV();
 
-            cout << "Plugin loaded!" << endl;
+            // vector<Vectori> obstacles = {Vectori{1,0,0}};
+            // vector<Vectori> path = {Vectori{0,0,2}};
 
-            cout << "Obstacle 0 at" << obstacles[0].x + "X "  << obstacles[0].y + "Y "  << obstacles[0].z + "Z " << endl;
-            cout << "Waypoint 0 at" << path[0].x + "X "  << path[0].y + "Y "  << path[0].z + "Z " << endl;
+            // cout << "Plugin loaded!" << endl;
+
+            // cout << "Obstacle 0 at" << obstacles[0].x + "X "  << obstacles[0].y + "Y "  << obstacles[0].z + "Z " << endl;
+            // cout << "Waypoint 0 at" << path[0].x + "X "  << path[0].y + "Y "  << path[0].z + "Z " << endl;
 
             int i = 0;
             for(auto obstacle : obstacles)
             {
-                cout << "Creating obstacle at " << obstacle.x + "X "  << obstacle.y + "Y "  << obstacle.z + "Z " << endl;
+                // cout << "Creating obstacle at " << obstacle.x + "X "  << obstacle.y + "Y "  << obstacle.z + "Z " << endl;
                 CreateMorph(obstacle, i, _parent);
                 i++;
             }
 
             for(auto pathPoint : path)
             {
-                cout << "Creating waypoint at " << pathPoint.x + "X "  << pathPoint.y + "Y "  << pathPoint.z + "Z " << endl;
+                // cout << "Creating waypoint at " << pathPoint.x + "X "  << pathPoint.y + "Y "  << pathPoint.z + "Z " << endl;
                 CreateMorph(pathPoint, i, _parent, "box", {0.25f, 0.25f, 0.25f});
                 i++;
             }
