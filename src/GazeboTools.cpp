@@ -23,6 +23,11 @@ namespace gazebo
             vector<Vectori> obstacles = fh.GetObstaclesFromCSV();
             vector<Vectori> path = fh.GetPathFromCSV();
 
+            cout << "Plugin loaded!" << endl;
+
+            cout << "Obstacle 0 at" << obstacles[0].x + "X "  << obstacles[0].y + "Y "  << obstacles[0].z + "Z " << endl;
+            cout << "Waypoint 0 at" << path[0].x + "X "  << path[0].y + "Y "  << path[0].z + "Z " << endl;
+
             int i = 0;
             for(auto obstacle : obstacles)
             {
