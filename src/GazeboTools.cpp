@@ -42,14 +42,14 @@ namespace gazebo
             for(auto pathPoint : path)
             {
                 // cout << "Creating waypoint at " << pathPoint.x + "X "  << pathPoint.y + "Y "  << pathPoint.z + "Z " << endl;
-                CreateMorph(pathPoint, i, _parent, "box", {0.25f, 0.25f, 0.25f});
+                CreateMorph(pathPoint, i, _parent, Vectorf({0.1,0.3,0.8}), "box", {0.25f, 0.25f, 0.25f}, {0,0.1f,0.1f});
                 i++;
             }
         }
 
     private:
 
-        void CreateMorph(Vectori pos, int iD, physics::WorldPtr _parent, string morph = "box", Vectorf scale = {1.0f, 1.0f, 1.0f})
+        void CreateMorph(Vectori pos, int iD, physics::WorldPtr _parent, Vectorf color = {0.75, 0.75, 0.75}, string morph = "box", Vectorf scale = {1.0f, 1.0f, 1.0f}, Vectorf emissive = {0,0,0})
         {
             sdf::SDF morphSDF;
 
@@ -72,6 +72,12 @@ namespace gazebo
                         <size>" + to_string(scale.x) + (string)" " + to_string(scale.y) + (string)" " + to_string(scale.z) + "</size>\
                        </" + morph + ">\
                       </geometry>\
+                      <material>\
+                       <ambient>" + to_string(color.x) + (string)" " + to_string(color.y) + (string)" " + to_string(color.z) + " 1</ambient>\
+                       <diffuse>" + to_string(color.x) + (string)" " + to_string(color.y) + (string)" " + to_string(color.z) + " 1</diffuse>\
+                       <specular>0.1 0.1 0.1 1</specular>\
+                       <emissive>" + to_string(emissive.x) + (string)" " + to_string(emissive.y) + (string)" " + to_string(emissive.z) + " 0</emissive>\
+                      </material>\
                      </visual>\
                     </link>\
                    </model>\

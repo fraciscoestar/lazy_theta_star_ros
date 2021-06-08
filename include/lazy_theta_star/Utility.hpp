@@ -12,6 +12,8 @@
 // #include <yaml-cpp/yaml.h>
 #include <ros/package.h>
 
+#define MAP_NAME "map_lazy_theta.csv"
+
 template<typename T>
 struct Vector
 {
@@ -165,7 +167,7 @@ public:
         std::vector<Vector<int>> path;
         int pathSize = 0;
 
-        std::fstream file(ros::package::getPath("lazy_theta_star") + "/worlds/" + RetrieveMapName());
+        std::fstream file(ros::package::getPath("lazy_theta_star") + "/worlds/path.csv");
 
         if(!file.is_open())
         {
@@ -239,7 +241,7 @@ public:
 
     std::string RetrieveMapName()
     {
-        return "map_lazy_theta.csv";
+        return MAP_NAME;
         // YAML::Node node = GetConfig();
         // std::string mapName = "";
 
