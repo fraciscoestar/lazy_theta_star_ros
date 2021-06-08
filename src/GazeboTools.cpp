@@ -26,12 +26,14 @@ namespace gazebo
             int i = 0;
             for(auto obstacle : obstacles)
             {
+                cout << "Creating obstacle at " << obstacle.x + "X "  << obstacle.y + "Y "  << obstacle.z + "Z " << endl;
                 CreateMorph(obstacle, i, _parent);
                 i++;
             }
 
             for(auto pathPoint : path)
             {
+                cout << "Creating waypoint at " << pathPoint.x + "X "  << pathPoint.y + "Y "  << pathPoint.z + "Z " << endl;
                 CreateMorph(pathPoint, i, _parent, "box", {0.25f, 0.25f, 0.25f});
                 i++;
             }

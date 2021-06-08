@@ -106,28 +106,66 @@ int main(int argc, char *argv[])
     
 ////////////////////////////////////////////////////////////////////////////////
 
-    // for(size_t t = 0; t < mapSizeX; t++) //FIX
-    // {
-    //     printf("%ld", t);
-    // }
-    // printf("\n\n");
+    uint8_t nLines = (mapSizeX/10 > 0) ? 2 : 1;
 
-    for (size_t i = 0; i < mapSizeY; i++)
+    cout << endl;
+
+    for (size_t k = 0; k < mapSizeZ; k++)
     {
-        //cout << to_string(i);
-        printf("%ld\t", i);
+        cout << "Z level " << k << endl;
+        cout << "----------------------------------------" << endl;
 
-        for (size_t j = 0; j < mapSizeX; j++)
+        if(nLines > 1)
         {
-            if(map[j][i][0] == 1)
-                printf("%c", '#');
-            else if(map[j][i][0] == 0)
-                printf("%c", ' ');
-            else
-                printf("%c", map[j][i][0]);
+            cout << endl << "\t";
+
+            for (size_t i = 0; i < mapSizeX; i++)
+            {
+                if(i<10)
+                {
+                    cout << " ";
+                }
+                else
+                {
+                    cout << i/10;
+                }
+                
+            }
         }
-        printf("\n");
+
+        cout << endl << "\t";
+        
+        for (size_t i = 0, j = 0; i < mapSizeX; i++, j++)
+        {
+            if(j == 10)
+                j = 0;
+
+            cout << j;
+        }
+
+        cout << endl << endl;
+        
+
+        for (size_t i = 0; i < mapSizeY; i++)
+        {
+            //cout << to_string(i);
+            printf("%ld\t", i);
+
+            for (size_t j = 0; j < mapSizeX; j++)
+            {
+                if(map[j][i][0] == 1)
+                    printf("%c", '#');
+                else if(map[j][i][k] == 0)
+                    printf("%c", ' ');
+                else
+                    printf("%c", map[j][i][k]);
+            }
+            printf("\n");
+        }
+
+        cout << endl << "----------------------------------------" << endl << endl;
     }
+
 
     Vectori startPoint = {-1,-1,-1};
     Vectori endPoint = {-1,-1,-1};
@@ -168,7 +206,7 @@ int main(int argc, char *argv[])
         if(insideOfMap && (bool)map[endPoint.x][endPoint.y][endPoint.z])
         {
             valid = false;
-            cout << "La posición es un obstáculo!" << endl;
+            cout << "La posición " << endPoint.x << "X " << endPoint.y << "Y " << endPoint.z << "Z " << "es un obstáculo! (" << "" << endl;
         }
     }
 
@@ -204,18 +242,28 @@ int main(int argc, char *argv[])
         map[path[i].x][path[i].y][path[i].z] = i + '1';
     }
 
-    for (size_t i = 0; i < mapSizeY; i++)
+    cout << endl;
+
+    for (size_t k = 0; k < mapSizeZ; k++)
     {
-        for (size_t j = 0; j < mapSizeX; j++)
+        cout << "Z level " << k << endl;
+        cout << "----------------------------------------" << endl;
+
+        for (size_t i = 0; i < mapSizeY; i++)
         {
-            if(map[j][i][0] == 1)
-                printf("%c", '#');
-            else if(map[j][i][0] == 0)
-                printf("%c", ' ');
-            else
-                printf("%c", map[j][i][0]);
+            for (size_t j = 0; j < mapSizeX; j++)
+            {
+                if(map[j][i][k] == 1)
+                    printf("%c", '#');
+                else if(map[j][i][k] == 0)
+                    printf("%c", ' ');
+                else
+                    printf("%c", map[j][i][k]);
+            }
+            printf("\n");
         }
-        printf("\n");
+
+        cout << endl << "----------------------------------------" << endl << endl;
     }
 
     printf("\nFinished!\n");
