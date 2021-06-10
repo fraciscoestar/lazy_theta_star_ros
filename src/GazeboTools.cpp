@@ -23,6 +23,9 @@ namespace gazebo
             vector<Vectori> obstacles = fh.GetObstaclesFromCSV();
             vector<Vectori> path = fh.GetPathFromCSV();
 
+            //_parent->SetGravity(ignition::math::Vector3d(0,0,0));
+            //_parent->EnablePhysicsEngine(false);
+
             // vector<Vectori> obstacles = {Vectori{1,0,0}};
             // vector<Vectori> path = {Vectori{0,0,2}};
 
@@ -44,11 +47,12 @@ namespace gazebo
                 if(pathPoint == path[0]) // Spawn quadrotor at startpoint
                 {
                     SpawnQuadrotor(pathPoint, _parent);
+                    break;
                 }
 
                 // cout << "Creating waypoint at " << pathPoint.x + "X "  << pathPoint.y + "Y "  << pathPoint.z + "Z " << endl;
-                CreateMorph(pathPoint + Vectorf({0.5f, 0.5f, 0.5f}), i, _parent, Vectorf({0.1f,0.3f,0.8f}), "box", {0.25f, 0.25f, 0.25f}, {0.0f,0.1f,0.1f});
-                i++;
+                // CreateMorph(pathPoint + Vectorf({0.5f, 0.5f, 0.5f}), i, _parent, Vectorf({0.1f,0.3f,0.8f}), "box", {0.25f, 0.25f, 0.25f}, {0.0f,0.1f,0.1f});
+                // i++;
             }
         }
 
@@ -63,7 +67,7 @@ namespace gazebo
             msgs::Factory msg;
             msg.set_sdf_filename("model://quadrotor");
 
-            msgs::Set(msg.mutable_pose(), ignition::math::Pose3d(ignition::math::Vector3d(position.x, position.y, position.z  + 0.5f), ignition::math::Quaterniond(0,0,0)));
+            msgs::Set(msg.mutable_pose(), ignition::math::Pose3d(ignition::math::Vector3d(position.x, position.y, position.z), ignition::math::Quaterniond(0,0,0)));
             factoryPub->Publish(msg);
         }
 
@@ -83,6 +87,11 @@ namespace gazebo
                         <size>" + to_string(scale.x) + (string)" " + to_string(scale.y) + (string)" " + to_string(scale.z) + "</size>\
                        </" + morph + ">\
                       </geometry>\
+                      <surface>\
+                       <contact>\
+                        <collide_without_contact>true</collide_without_contact>\
+                       </contact>\
+                      </surface>\
                      </collision>\
                      <visual name='visual'>\
                       <geometry>\
