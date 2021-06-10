@@ -53,9 +53,21 @@ public:
             pos.z += (float)dir.z * step.z;
 
             if(!IsTraversable(Vectori(pos)))
-            {
                 return false;
-            }
+
+            // Para evitar esquinas.
+            
+            // if(!IsTraversable(Vectori(pos + Vectorf({0.02f,0.02f,0.02f}))) || !IsTraversable(Vectori(pos + Vectorf({-0.02f,-0.02f,0.02f}))))
+            //     return false;
+            
+            // if(!IsTraversable(Vectori(pos + Vectorf({-0.02f,0.02f,0.02f}))) || !IsTraversable(Vectori(pos + Vectorf({0.02f,-0.05f,0.02f}))))
+            //     return false;
+
+            // if(!IsTraversable(Vectori(pos + Vectorf({0.02f,0.02f,-0.02f}))) || !IsTraversable(Vectori(pos + Vectorf({-0.02f,-0.05f,-0.02f}))))
+            //     return false;
+            
+            // if(!IsTraversable(Vectori(pos + Vectorf({-0.02f,0.02f,-0.02f}))) || !IsTraversable(Vectori(pos + Vectorf({0.02f,-0.05f,-0.02f}))))
+            //     return false;
         }
         
         return true;

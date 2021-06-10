@@ -41,13 +41,31 @@ namespace gazebo
 
             for(auto pathPoint : path)
             {
+                if(pathPoint == path[0]) // Spawn quadrotor at startpoint
+                {
+                    SpawnQuadrotor(pathPoint, _parent);
+                }
+
                 // cout << "Creating waypoint at " << pathPoint.x + "X "  << pathPoint.y + "Y "  << pathPoint.z + "Z " << endl;
-                CreateMorph(pathPoint, i, _parent, Vectorf({0.1,0.3,0.8}), "box", {0.25f, 0.25f, 0.25f}, {0,0.1f,0.1f});
+                CreateMorph(pathPoint + Vectorf({0.5f, 0.5f, 0.5f}), i, _parent, Vectorf({0.1f,0.3f,0.8f}), "box", {0.25f, 0.25f, 0.25f}, {0.0f,0.1f,0.1f});
                 i++;
             }
         }
 
     private:
+
+        void SpawnQuadrotor(Vectori position, physics::WorldPtr _parent)
+        {
+            transport::NodePtr node(new transport::Node());
+            node->Init(_parent->GetName());
+
+            transport::PublisherPtr factoryPub = node->Advertise<msgs::Factory>("~/factory");
+            msgs::Factory msg;
+            msg.set_sdf_filename("model://quadrotor");
+
+            msgs::Set(msg.mutable_pose(), ignition::math::Pose3d(ignition::math::Vector3d(position.x, position.y, position.z  + 0.5f), ignition::math::Quaterniond(0,0,0)));
+            factoryPub->Publish(msg);
+        }
 
         void CreateMorph(Vectori pos, int iD, physics::WorldPtr _parent, Vectorf color = {0.75, 0.75, 0.75}, string morph = "box", Vectorf scale = {1.0f, 1.0f, 1.0f}, Vectorf emissive = {0,0,0})
         {
