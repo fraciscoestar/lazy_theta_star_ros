@@ -31,7 +31,7 @@ public:
 
     virtual bool IsObstacle(const NodeId id) const override
     {
-        return mIsTraversable(IdToPos(id));
+        return !mIsTraversable(IdToPos(id));
     }
 
     // Devuelve un vector con todos los vecinos y los costes de ir a cada uno de ellos.

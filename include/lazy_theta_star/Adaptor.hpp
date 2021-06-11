@@ -39,21 +39,28 @@ public:
         Vectorf pos = (Vectorf)l1 + Vectorf({0.5f, 0.5f, 0.5f});
         Vectori dir = l2 - l1;
 
-        uint16_t nIter = 200;
+        float dist = sqrt(dir.x * dir.x + dir.y * dir.y + dir.z * dir.z);
 
-        Vectorf step = {1.0f/nIter, 1.0f/nIter, 1.0f/nIter};
+        float step = 0.05f;
+        uint16_t nIter = dist / step;
+        
+
+        //std::cout << "N: " << nIter << std::endl;
 
         // cout << "steps: " << step.x << "," << step.y << "," << step.z << endl;
         //cout << "dir: " << dir.x << "," << dir.y << "," << dir.z << endl;
 
         for (size_t i = 0; i < nIter; i++)
         {
-            pos.x += (float)dir.x * step.x;
-            pos.y += (float)dir.y * step.y;
-            pos.z += (float)dir.z * step.z;
+            pos.x += (float)dir.x * step;
+            pos.y += (float)dir.y * step;
+            pos.z += (float)dir.z * step;
 
             if(!IsTraversable(Vectori(pos)))
                 return false;
+
+            if((Vectori)pos == l2)
+                break;
         }
         
         return true;

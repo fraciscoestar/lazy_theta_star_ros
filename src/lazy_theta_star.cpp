@@ -100,7 +100,8 @@ int main(int argc, char *argv[])
     } 
 
     Vectori mapSize = {mapSizeX, mapSizeY, mapSizeZ};
-    array<array<array<char, 100>, 100>, 50> map;
+
+    array<array<array<char, 20>, 40>, 40> map;
 
     for (int depth = 0; depth < mapSizeZ; ++depth)
     {
@@ -182,7 +183,7 @@ int main(int argc, char *argv[])
 
             for (size_t j = 0; j < mapSizeX; j++)
             {
-                if(map[j][i][0] == 1)
+                if(map[j][i][k] == 1)
                     printf("%c", '#');
                 else if(map[j][i][k] == 0)
                     printf("%c", ' ');
@@ -316,7 +317,7 @@ int main(int argc, char *argv[])
 
     for (size_t i = 0; i < path.size(); i++)
     {
-        map[path[i].x][path[i].y][path[i].z] = i + '1';
+        map[path[i].x][path[i].y][path[i].z] = '*';
     }
 
     std::cout << std::endl;

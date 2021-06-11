@@ -12,7 +12,7 @@
 // #include <yaml-cpp/yaml.h>
 #include <ros/package.h>
 
-#define MAP_NAME "map_lazy_theta.csv"
+#define MAP_NAME "map2.csv"
 
 template<typename T>
 struct Vector

@@ -79,7 +79,7 @@ public:
 
         // Continúa iterando mientras la lista abierta no este vacía y el
         // coste g del nodo destino sea mayor que la f menor de la lista.
-        while (!openList.empty() && nodes[endId].g > GetMin().f + EPSILON)
+        while (!openList.empty())
         {
             // Sacamos el nodo de menor coste de la lista para expandirlo.
             NodeId currId = GetMin().id;
@@ -99,19 +99,17 @@ public:
 
                 GenerateState(neighbourId, endId); // Inicializa el vecino.
 
-                NodeId newParent = nodes[currId].parent; // Obtén el padre.
-
                 // Si el vecino no está en la lista cerrada.
                 if(nodes[neighbourId].list != CLOSED_LIST)
                 {
-                    // Calcula el nuevo coste del nodo vecino (a partir del padre obtenido).
-                    Cost newG = nodes[newParent].g + adaptor.Distance(newParent, neighbourId);
+                    // Calcula el nuevo coste del nodo vecino (a partir de la celda actual obtenido).
+                    Cost newG = nodes[currId].g + neighbourInfo.second;
 
                     // Si el nuevo coste g es menor que el coste g del vecino actual.
                     if(newG + EPSILON < nodes[neighbourId].g)
                     {
                         nodes[neighbourId].g = newG; // Actualiza el coste g.
-                        nodes[neighbourId].parent = newParent; // Actualiza el padre.
+                        nodes[neighbourId].parent = currId; // Actualiza el padre.
                         AddToOpenList(neighbourId); // Añade el vecino a la lista abierta.
                     }
                 }
