@@ -3,8 +3,10 @@
 #include <sstream>
 #include <tuple>
 #include <array>
+#include <chrono>
 
 #include <Adaptor.hpp>
+#include <AStarAdaptor.hpp>
 
 #include <ros/ros.h>
 #include <ros/package.h>
@@ -41,8 +43,9 @@ geometry_msgs::TwistStamped CalculateRefVel(geometry_msgs::PoseStamped _target_p
 void ModelStateCallback(const gazebo_msgs::ModelStatesConstPtr& _msg);
 
 geometry_msgs::Pose pos;
-void UpdatePose(const nav_msgs::Odometry _odom);
+void UpdatePose(const nav_msgs::Odometry);
 bool IsValid(Vectori, Vectori);
+float pathLength(std::vector<Vectori>);
 
 Vectori IndexToPos(const int id, Vectori mMapSize)
 {
@@ -65,7 +68,7 @@ int main(int argc, char *argv[])
 
     FilesHandler fh;
 
-    //cout << package::getPath("lazy_theta_star") << endl;
+    //std::cout << package::getPath("lazy_theta_star") << std::endl;
     string mapName = fh.RetrieveMapName();
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -134,47 +137,47 @@ int main(int argc, char *argv[])
 
     uint8_t nLines = (mapSizeX/10 > 0) ? 2 : 1;
 
-    cout << endl;
+    std::cout << std::endl;
 
     for (size_t k = 0; k < mapSizeZ; k++)
     {
-        cout << "Z level " << k << endl;
-        cout << "----------------------------------------" << endl;
+        std::cout << "Z level " << k << std::endl;
+        std::cout << "----------------------------------------" << std::endl;
 
         if(nLines > 1)
         {
-            cout << endl << "\t";
+            std::cout << std::endl << "\t";
 
             for (size_t i = 0; i < mapSizeX; i++)
             {
                 if(i<10)
                 {
-                    cout << " ";
+                    std::cout << " ";
                 }
                 else
                 {
-                    cout << i/10;
+                    std::cout << i/10;
                 }
                 
             }
         }
 
-        cout << endl << "\t";
+        std::cout << std::endl << "\t";
         
         for (size_t i = 0, j = 0; i < mapSizeX; i++, j++)
         {
             if(j == 10)
                 j = 0;
 
-            cout << j;
+            std::cout << j;
         }
 
-        cout << endl << endl;
+        std::cout << std::endl << std::endl;
         
 
         for (size_t i = 0; i < mapSizeY; i++)
         {
-            //cout << to_string(i);
+            //std::cout << to_string(i);
             printf("%ld\t", i);
 
             for (size_t j = 0; j < mapSizeX; j++)
@@ -189,7 +192,7 @@ int main(int argc, char *argv[])
             printf("\n");
         }
 
-        cout << endl << "----------------------------------------" << endl << endl;
+        std::cout << std::endl << "----------------------------------------" << std::endl << std::endl;
     }
 
 
@@ -199,66 +202,114 @@ int main(int argc, char *argv[])
 
     while (!valid)
     {
-        cout << "Introduzca origen:" << endl << "x=";
-        cin >> startPoint.x;
-        cout << "y=";
-        cin >> startPoint.y;
-        cout << "z=";
-        cin >> startPoint.z;
+        std::cout << "Introduzca origen:" << std::endl << "x=";
+        std::cin >> startPoint.x;
+        std::cout << "y=";
+        std::cin >> startPoint.y;
+        std::cout << "z=";
+        std::cin >> startPoint.z;
 
         bool insideOfMap = IsValid(startPoint, mapSize);
+        if(!insideOfMap)
+            continue;
+
         valid = insideOfMap;
 
-        if(insideOfMap && (bool)map[startPoint.x][startPoint.y][startPoint.z])
+        if((bool)map[startPoint.x][startPoint.y][startPoint.z])
         {
             valid = false;
-            cout << "La posición es un obstáculo!" << endl;
+            std::cout << "La posición " << endPoint.x << "X " << endPoint.y << "Y " << endPoint.z << "Z " << "es un obstáculo!" << "" << std::endl;
         }
     }
     
     valid = false;
     while (!valid)
     {
-        cout << "Introduzca destino:" << endl << "x=";
-        cin >> endPoint.x;
-        cout << "y=";
-        cin >> endPoint.y;
-        cout << "z=";
-        cin >> endPoint.z;
+        std::cout << "Introduzca destino:" << std::endl << "x=";
+        std::cin >> endPoint.x;
+        std::cout << "y=";
+        std::cin >> endPoint.y;
+        std::cout << "z=";
+        std::cin >> endPoint.z;
 
         bool insideOfMap = IsValid(startPoint, mapSize);
+        if(!insideOfMap)
+            continue;
+
         valid = insideOfMap;
 
-        if(insideOfMap && (bool)map[endPoint.x][endPoint.y][endPoint.z])
+        if((bool)map[endPoint.x][endPoint.y][endPoint.z])
         {
             valid = false;
-            cout << "La posición " << endPoint.x << "X " << endPoint.y << "Y " << endPoint.z << "Z " << "es un obstáculo! (" << "" << endl;
+            std::cout << "La posición " << endPoint.x << "X " << endPoint.y << "Y " << endPoint.z << "Z " << "es un obstáculo!" << "" << std::endl;
         }
     }
 
     Adaptor adaptor({mapSizeX, mapSizeY, mapSizeZ}, [&map](const Vectori& vec){return map[vec.x][vec.y][vec.z] != 1;});
     Pathfinding pathfinding(adaptor, 100.0f);
 
-    auto nodePath = pathfinding.Search(adaptor.PosToId(startPoint), adaptor.PosToId(endPoint));
+    AStarAdaptor aStarAdaptor({mapSizeX, mapSizeY, mapSizeZ}, [&map](const Vectori& vec){return map[vec.x][vec.y][vec.z] != 1;});
+    AStarPathfinding aStarPathfinding(aStarAdaptor, 100.0f);
 
-    // Convierte los nodos de ID a posición.
-    vector<Vectori> path;
-    path.reserve(nodePath.size());
+    int algo = 1;
+    std::cout << "Algoritmo a utilizar:" << std::endl << "[1] Lazy Theta Star" << std::endl << "[2] A Star" << std::endl;
+    std::cin >> algo;
 
-    for(const auto id : nodePath)
-        path.push_back(adaptor.IdToPos(id));
+    std::chrono::steady_clock::time_point initTime;
+    std::vector<Vectori> path;
 
-    if(path.size())
+    if(algo != 1 && algo != 2)
     {
-        path.pop_back();
-        path.erase(path.begin());
-    }
-
-    if(path.empty() && !adaptor.LineOfSight(adaptor.PosToId(startPoint), adaptor.PosToId(endPoint)))
-    {
-        cout << "No se encontró un camino!" << endl;
+        std::cout << "Opción no válida!" << std::endl;
         exit(-1);
     }
+    else if(algo == 1) //////////////////// LAZY THETA STAR ////////////////////
+    {
+        initTime = std::chrono::steady_clock::now();
+        auto nodePath = pathfinding.Search(adaptor.PosToId(startPoint), adaptor.PosToId(endPoint));
+
+        // Convierte los nodos de ID a posición.
+        path.reserve(nodePath.size());
+
+        for(const auto id : nodePath)
+            path.push_back(adaptor.IdToPos(id));
+
+        if(path.size())
+        {
+            path.pop_back();
+            path.erase(path.begin());
+        }
+
+        if(path.empty() && !adaptor.LineOfSight(adaptor.PosToId(startPoint), adaptor.PosToId(endPoint)))
+        {
+            std::cout << "No se encontró un camino!" << std::endl;
+            exit(-1);
+        } 
+    }
+    else //////////////////// A STAR //////////////////// 
+    {
+        initTime = std::chrono::steady_clock::now();
+        auto nodePath = aStarPathfinding.Search(adaptor.PosToId(startPoint), adaptor.PosToId(endPoint));
+
+        // Convierte los nodos de ID a posición.
+        path.reserve(nodePath.size());
+
+        for(const auto id : nodePath)
+            path.push_back(aStarAdaptor.IdToPos(id));
+
+        if(path.size())
+        {
+            path.pop_back();
+            path.erase(path.begin());
+        }
+
+        if(!IsValid(path[0], mapSize))
+        {
+            std::cout << "No se encontró un camino!" << std::endl;
+            exit(-1);
+        } 
+    }
+    auto endTime = std::chrono::steady_clock::now();
 
     map[startPoint.x][startPoint.y][startPoint.z] = 'S';
     map[endPoint.x][endPoint.y][endPoint.z] = 'E';
@@ -268,12 +319,12 @@ int main(int argc, char *argv[])
         map[path[i].x][path[i].y][path[i].z] = i + '1';
     }
 
-    cout << endl;
+    std::cout << std::endl;
 
     for (size_t k = 0; k < mapSizeZ; k++)
     {
-        cout << "Z level " << k << endl;
-        cout << "----------------------------------------" << endl;
+        std::cout << "Z level " << k << std::endl;
+        std::cout << "----------------------------------------" << std::endl;
 
         for (size_t i = 0; i < mapSizeY; i++)
         {
@@ -289,13 +340,10 @@ int main(int argc, char *argv[])
             printf("\n");
         }
 
-        cout << endl << "----------------------------------------" << endl << endl;
+        std::cout << std::endl << "----------------------------------------" << std::endl << std::endl;
     }
-
-    printf("\nFinished!\n");
-
     
-    vector<Vectori> fullPath;
+    std::vector<Vectori> fullPath;
 
     fullPath.push_back(startPoint);
     for(auto point : path)
@@ -304,11 +352,15 @@ int main(int argc, char *argv[])
     }
     fullPath.push_back(endPoint);
 
+    std::cout << std::endl << "Finalizado!" << std::endl;
+    std::cout << "El camino fue hallado en " << std::chrono::duration_cast<std::chrono::microseconds>(endTime - initTime).count() << "µs." << std::endl;
+    std::cout << "Longitud del camino: " + to_string(pathLength(fullPath)) + " metros." << std::endl;
+
     fh.WritePathToCSV(fullPath);
 
-    cout << "Presione una tecla para continuar" << endl;
+    std::cout << "Presione una tecla para continuar" << std::endl;
     string s;
-    cin >> s;
+    std::cin >> s;
 
     ros::Publisher model_state_publisher_ = nh.advertise<gazebo_msgs::ModelState>("/gazebo/set_model_state", 1);
     ros::Subscriber model_state_subscriber_ = nh.subscribe<gazebo_msgs::ModelStates>("/gazebo/model_states", 1, ModelStateCallback);
@@ -339,7 +391,7 @@ int main(int argc, char *argv[])
 
         if(dx < 0.02f && dy < 0.02f && dz < 0.02f)
         {
-            cout << "Alcanzado waypoint[" + to_string(i+1) + (string)"/" + to_string(fullPath.size()) + "] " << fullPath[i].x << "X " << fullPath[i].y << "Y " << fullPath[i].z << "Z" << endl;
+            std::cout << "Alcanzado waypoint[" + to_string(i+1) + (string)"/" + to_string(fullPath.size()) + "] " << fullPath[i].x << "X " << fullPath[i].y << "Y " << fullPath[i].z << "Z" << std::endl;
 
             if(i < fullPath.size()-1)
             {
@@ -351,7 +403,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-                cout << "Destino alcanzado." << endl;
+                std::cout << "Destino alcanzado." << std::endl;
                 break;
             }
         }
@@ -367,11 +419,23 @@ int main(int argc, char *argv[])
         rate.sleep();
     }
 
-    cout << "Programa terminado." << endl;
+    std::cout << "Programa terminado." << std::endl;
 
     ros::spin();
     
     return 0;
+}
+
+float pathLength(std::vector<Vectori> path)
+{
+    float length = 0;
+
+    for (int i = path.size() - 1; i > 0; i--)
+    {
+        length += sqrt(pow((path[i].x - path[i-1].x), 2) + pow((path[i].y - path[i-1].y), 2) + pow((path[i].z - path[i-1].z), 2)); 
+    }
+    
+    return length;
 }
 
 void UpdatePose(const nav_msgs::Odometry _odom)
@@ -383,8 +447,11 @@ bool IsValid(Vectori v, Vectori limit)
 {
     if(v.x<0 || v.x >= limit.x || v.y<0 || v.y >= limit.y || v.z<0 || v.z >= limit.z)
     {
-        cout << "La posición está fuera de los límites!" << endl;
+        std::cout << "La posición está fuera de los límites!" << std::endl;
+        return false;
     }
+    else
+        return true;
 }
 
 void ModelStateCallback(const gazebo_msgs::ModelStatesConstPtr& _msg)

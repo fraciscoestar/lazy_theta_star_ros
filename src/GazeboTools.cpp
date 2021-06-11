@@ -26,14 +26,6 @@ namespace gazebo
             //_parent->SetGravity(ignition::math::Vector3d(0,0,0));
             //_parent->EnablePhysicsEngine(false);
 
-            // vector<Vectori> obstacles = {Vectori{1,0,0}};
-            // vector<Vectori> path = {Vectori{0,0,2}};
-
-            // cout << "Plugin loaded!" << endl;
-
-            // cout << "Obstacle 0 at" << obstacles[0].x + "X "  << obstacles[0].y + "Y "  << obstacles[0].z + "Z " << endl;
-            // cout << "Waypoint 0 at" << path[0].x + "X "  << path[0].y + "Y "  << path[0].z + "Z " << endl;
-
             int i = 0;
             for(auto obstacle : obstacles)
             {
@@ -47,12 +39,11 @@ namespace gazebo
                 if(pathPoint == path[0]) // Spawn quadrotor at startpoint
                 {
                     SpawnQuadrotor(pathPoint, _parent);
-                    break;
                 }
 
                 // cout << "Creating waypoint at " << pathPoint.x + "X "  << pathPoint.y + "Y "  << pathPoint.z + "Z " << endl;
-                // CreateMorph(pathPoint + Vectorf({0.5f, 0.5f, 0.5f}), i, _parent, Vectorf({0.1f,0.3f,0.8f}), "box", {0.25f, 0.25f, 0.25f}, {0.0f,0.1f,0.1f});
-                // i++;
+                CreateMorph(pathPoint + Vectorf({0.5f, 0.5f, 0.5f}), i, _parent, Vectorf({0.1f,0.3f,0.8f}), "box", {0.25f, 0.25f, 0.25f}, {0.0f,0.1f,0.0f});
+                i++;
             }
         }
 
@@ -71,9 +62,23 @@ namespace gazebo
             factoryPub->Publish(msg);
         }
 
-        void CreateMorph(Vectori pos, int iD, physics::WorldPtr _parent, Vectorf color = {0.75, 0.75, 0.75}, string morph = "box", Vectorf scale = {1.0f, 1.0f, 1.0f}, Vectorf emissive = {0,0,0})
+        void CreateMorph(Vectori pos, int iD, physics::WorldPtr _parent, Vectorf color = {0.75, 0.75, 1}, string morph = "box", Vectorf scale = {1.0f, 1.0f, 1.0f}, Vectorf emissive = {0,0,0})
         {
             sdf::SDF morphSDF;
+
+                    // DEBAJO DE LINK
+                    //  <collision name='collision'>\
+                    //   <geometry>\
+                    //    <" + morph + ">\
+                    //     <size>" + to_string(scale.x) + (string)" " + to_string(scale.y) + (string)" " + to_string(scale.z) + "</size>\
+                    //    </" + morph + ">\
+                    //   </geometry>\
+                    //   <surface>\
+                    //    <contact>\
+                    //     <collide_without_contact>true</collide_without_contact>\
+                    //    </contact>\
+                    //   </surface>\
+                    //  </collision>\
 
             string str = 
                 "<sdf version='1.6'>\
@@ -81,18 +86,6 @@ namespace gazebo
                     <pose>" + to_string(pos.x) + (string)" " + to_string(pos.y) + (string)" " + to_string(pos.z+0.5f) + (string)" 0 0 0</pose>\
                     <static>true</static>\
                     <link name='link'>\
-                     <collision name='collision'>\
-                      <geometry>\
-                       <" + morph + ">\
-                        <size>" + to_string(scale.x) + (string)" " + to_string(scale.y) + (string)" " + to_string(scale.z) + "</size>\
-                       </" + morph + ">\
-                      </geometry>\
-                      <surface>\
-                       <contact>\
-                        <collide_without_contact>true</collide_without_contact>\
-                       </contact>\
-                      </surface>\
-                     </collision>\
                      <visual name='visual'>\
                       <geometry>\
                        <" + morph + ">\
