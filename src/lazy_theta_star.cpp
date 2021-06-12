@@ -31,7 +31,7 @@ std::string uav_home_frame_id;
 geometry_msgs::Pose pose;
 geometry_msgs::PoseStamped ref_pose;
 geometry_msgs::PoseStamped cur_pose;
-geometry_msgs::PoseStamped gazebo_pose;
+// geometry_msgs::PoseStamped gazebo_pose;
 geometry_msgs::TwistStamped ref_vel;
 geometry_msgs::TwistStamped cur_vel;
 
@@ -46,6 +46,7 @@ geometry_msgs::Pose pos;
 void UpdatePose(const nav_msgs::Odometry);
 bool IsValid(Vectori, Vectori);
 float pathLength(std::vector<Vectori>);
+geometry_msgs::Quaternion EulerToQuaternion(double yaw, double pitch, double roll);
 
 Vectori IndexToPos(const int id, Vectori mMapSize)
 {
@@ -101,7 +102,7 @@ int main(int argc, char *argv[])
 
     Vectori mapSize = {mapSizeX, mapSizeY, mapSizeZ};
 
-    array<array<array<char, 20>, 40>, 40> map;
+    array<array<array<char, 20>, 50>, 50> map;
 
     for (int depth = 0; depth < mapSizeZ; ++depth)
     {
@@ -317,7 +318,7 @@ int main(int argc, char *argv[])
 
     for (size_t i = 0; i < path.size(); i++)
     {
-        map[path[i].x][path[i].y][path[i].z] = '*';
+        map[path[i].x][path[i].y][path[i].z] = '+';
     }
 
     std::cout << std::endl;
@@ -380,8 +381,8 @@ int main(int argc, char *argv[])
     ref_pose.pose.position.y = fullPath[0].y;
     ref_pose.pose.position.z = fullPath[0].z + 0.5f;
 
-    gazebo_pose.pose = geometry_msgs::Pose();
-    gazebo_pose.pose = ref_pose.pose;
+    //gazebo_pose.pose = geometry_msgs::Pose();
+    cur_pose.pose = ref_pose.pose;
 
     int i = 0;
     while (ros::ok()) 
@@ -400,7 +401,10 @@ int main(int argc, char *argv[])
 
                 ref_pose.pose.position.x = fullPath[i].x;
                 ref_pose.pose.position.y = fullPath[i].y;
-                ref_pose.pose.position.z = fullPath[i].z + 0.5f;            
+                ref_pose.pose.position.z = fullPath[i].z + 0.5f; 
+
+                double dYaw = atan2(fullPath[i].y - fullPath[i-1].y, fullPath[i].x - fullPath[i-1].x);
+                ref_pose.pose.orientation = EulerToQuaternion(dYaw, 0, 0);
             }
             else
             {
@@ -412,7 +416,7 @@ int main(int argc, char *argv[])
         ref_vel = CalculateRefVel(ref_pose);
         Move();
             
-        current.pose = gazebo_pose.pose;
+        current.pose = cur_pose.pose;
         current.reference_frame = "map";
         model_state_publisher_.publish(current);
             
@@ -425,6 +429,24 @@ int main(int argc, char *argv[])
     ros::spin();
     
     return 0;
+}
+
+geometry_msgs::Quaternion EulerToQuaternion(double yaw, double pitch, double roll)
+{
+    double cy = cos(yaw * 0.5);
+    double sy = sin(yaw * 0.5);
+    double cp = cos(pitch * 0.5);
+    double sp = sin(pitch * 0.5);
+    double cr = cos(roll * 0.5);
+    double sr = sin(roll * 0.5);
+
+    geometry_msgs::Quaternion q;
+    q.w = cr * cp * cy + sr* sp * sy;
+    q.x = sr * cp * cy + cr* sp * sy;
+    q.y = cr * sp * cy + sr* cp * sy;
+    q.z = cr * cp * sy + sr* sp * cy;
+
+    return q;
 }
 
 float pathLength(std::vector<Vectori> path)
@@ -471,14 +493,22 @@ void ModelStateCallback(const gazebo_msgs::ModelStatesConstPtr& _msg)
 geometry_msgs::TwistStamped CalculateRefVel(geometry_msgs::PoseStamped _target_pose) 
 {
     geometry_msgs::TwistStamped vel;
+    double max_yaw_rate = 1.0;
+    double max_horizontal_velocity = 1.0;
+    double max_vertical_velocity = 1.0;
 
     double dx = _target_pose.pose.position.x - cur_pose.pose.position.x;
     double dy = _target_pose.pose.position.y - cur_pose.pose.position.y;
     double dz = _target_pose.pose.position.z - cur_pose.pose.position.z;
+    double dYaw = 2*atan2(_target_pose.pose.orientation.z,_target_pose.pose.orientation.w) - 2*atan2(cur_pose.pose.orientation.z,cur_pose.pose.orientation.w);
+        while (dYaw < -M_PI) dYaw += 2*M_PI;
+        while (dYaw >  M_PI) dYaw -= 2*M_PI;
 
-    double Th = sqrt( dx*dx + dy*dy ) / 2; // /max_horizontal_velocity_
-    double Tz = std::abs( dz / 1 ); // /max_vertical_velocity_
+    double Th = sqrt( dx*dx + dy*dy ) / max_horizontal_velocity;
+    double Tz = std::abs( dz / max_vertical_velocity); 
+    double TYaw = std::abs( dYaw / max_yaw_rate);
     double T = std::max(Th, Tz);
+    T = std::max(T, TYaw);
 
     if ( T < 1/FPS ) {
         T = 1/FPS;
@@ -487,27 +517,7 @@ geometry_msgs::TwistStamped CalculateRefVel(geometry_msgs::PoseStamped _target_p
 	vel.twist.linear.x = dx / T;
     vel.twist.linear.y = dy / T;
     vel.twist.linear.z = dz / T;
-
-
-        // if ( std::abs( dx ) < max_position_error_ ) { 
-        //     vel.twist.linear.x = 0.0;
-        //     cur_pose_.pose.position.x = 0.8*cur_pose_.pose.position.x + 0.2*_target_pose.pose.position.x;
-        // }
-        // if ( std::abs( dy ) < max_position_error_ ) {
-        //     vel.twist.linear.y = 0.0;
-        //     cur_pose_.pose.position.y = 0.8*cur_pose_.pose.position.y + 0.2*_target_pose.pose.position.y;
-        // }
-        // if ( std::abs( dz ) < max_position_error_ ) {
-        //     vel.twist.linear.z = 0.0;
-        //     cur_pose_.pose.position.z = 0.8*cur_pose_.pose.position.z + 0.2*_target_pose.pose.position.z;
-        // }
-        // if ( std::abs( dYaw ) < max_orientation_error_ ) {
-        //     vel.twist.angular.z = 0.0;
-        //     cur_pose_.pose.orientation.x = 0.5*cur_pose_.pose.orientation.x + 0.5*_target_pose.pose.orientation.x;
-        //     cur_pose_.pose.orientation.y = 0.5*cur_pose_.pose.orientation.y + 0.5*_target_pose.pose.orientation.y;
-        //     cur_pose_.pose.orientation.z = 0.5*cur_pose_.pose.orientation.z + 0.5*_target_pose.pose.orientation.z;
-        //     cur_pose_.pose.orientation.w = 0.5*cur_pose_.pose.orientation.w + 0.5*_target_pose.pose.orientation.w;
-        // }
+    vel.twist.angular.z = dYaw / T;
 
     return vel;
 }
@@ -520,27 +530,18 @@ void Move()
     cur_vel.twist.linear.x = (0.2 * ref_vel.twist.linear.x + 0.8 * cur_vel.twist.linear.x);
     cur_vel.twist.linear.y = (0.2 * ref_vel.twist.linear.y + 0.8 * cur_vel.twist.linear.y);
     cur_vel.twist.linear.z = (0.2 * ref_vel.twist.linear.z + 0.8 * cur_vel.twist.linear.z);
+    cur_vel.twist.angular.z = (0.5 * ref_vel.twist.angular.z + 0.5 * cur_vel.twist.angular.z);
 
     cur_pose.pose.position.x += dt * cur_vel.twist.linear.x;
     cur_pose.pose.position.y += dt * cur_vel.twist.linear.y;
     cur_pose.pose.position.z += dt * cur_vel.twist.linear.z;
 
-    // Transform to map
-    geometry_msgs::TransformStamped transformToGazeboFrame;
-    gazebo_pose = cur_pose; //FIX??
+    double cur_yaw = 2.0 * atan2(cur_pose.pose.orientation.z, cur_pose.pose.orientation.w);
+    cur_yaw += dt * cur_vel.twist.angular.z;
+    cur_pose.pose.orientation.x = 0;
+    cur_pose.pose.orientation.y = 0;
+    cur_pose.pose.orientation.z = sin(0.5*cur_yaw);
+    cur_pose.pose.orientation.w = cos(0.5*cur_yaw);
 
-    /*if ( cached_transforms_.find("inv_map") == cached_transforms_.end() ) {
-        // inv_map not found in cached_transforms_
-        try {  // TODO: This try-catch is repeated several times, make a function?
-            transformToGazeboFrame = tf_buffer_.lookupTransform("map", uav_home_frame_id, ros::Time(0), ros::Duration(0.2));
-            cached_transforms_["inv_map"] = transformToGazeboFrame; // Save transform in cache
-        } catch (tf2::TransformException &ex) {
-            ROS_WARN("At line [%d]: %s", __LINE__, ex.what());
-            return;
-        }
-    } else {
-        // found in cache
-        transformToGazeboFrame = cached_transforms_["inv_map"];
-    }
-    tf2::doTransform(cur_pose, gazebo_pose, transformToGazeboFrame);*/
+    //gazebo_pose = cur_pose;
 }

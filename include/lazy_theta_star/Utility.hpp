@@ -12,7 +12,7 @@
 // #include <yaml-cpp/yaml.h>
 #include <ros/package.h>
 
-#define MAP_NAME "map2.csv"
+#define MAP_NAME "map.csv"
 
 template<typename T>
 struct Vector
