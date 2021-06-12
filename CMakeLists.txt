@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   geometry_msgs
   gazebo_ros
+  uav_abstraction_layer
   # message_generation
 )
 
@@ -116,6 +117,7 @@ catkin_package(
     roscpp
     gazebo_ros
     geometry_msgs
+    uav_abstraction_layer
     # message_runtime
   # INCLUDE_DIRS include
   # LIBRARIES lazy_theta_star
