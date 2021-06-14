@@ -12,7 +12,7 @@
 // #include <yaml-cpp/yaml.h>
 #include <ros/package.h>
 
-#define MAP_NAME "map.csv"
+#define MAP_NAME "map_lazy_theta.csv"
 
 template<typename T>
 struct Vector
@@ -69,9 +69,10 @@ class FilesHandler
 {
 public:
 
-    std::vector<Vector<int>> GetObstaclesFromCSV()
+    static std::vector<Vector<int>> GetObstaclesFromCSV()
     {
         std::vector<Vector<int>> obstacles;
+        std::vector<int> mapSize = {0, 0, 0};
 
         std::fstream file(ros::package::getPath("lazy_theta_star") + "/worlds/" + RetrieveMapName());
 
@@ -135,7 +136,7 @@ public:
         return obstacles;
     }
 
-    void WritePathToCSV(std::vector<Vector<int>> path)
+    static void WritePathToCSV(std::vector<Vector<int>> path, bool ual)
     {
         std::string filePath = ros::package::getPath("lazy_theta_star") + "/worlds/path.csv";
 
@@ -152,7 +153,7 @@ public:
         fs.open(filePath, std::fstream::out);
 
         int pathSize = path.size();
-        fs << std::to_string(pathSize) << "," << std::endl;
+        fs << std::to_string(pathSize) << ", " << std::to_string((int)ual) << "," << std::endl;
 
         for(auto point : path)
         {
@@ -162,7 +163,7 @@ public:
         fs.close();
     }
 
-    std::vector<Vector<int>> GetPathFromCSV()
+    static std::vector<Vector<int>> GetPathFromCSV(bool *ual)
     {
         std::vector<Vector<int>> path;
         int pathSize = 0;
@@ -179,11 +180,25 @@ public:
         std::getline(file, sizeStr);
         std::stringstream sstream(sizeStr);
         
-        std::string val;
-        std::getline(sstream, val, ',');
+        // std::string val;
+        // std::getline(sstream, val, ',');
+        // std::stringstream convertor(val);
+        // convertor >> pathSize;    
 
-        std::stringstream convertor(val);
-        convertor >> pathSize;     
+        for (size_t i = 0; i < 2; i++) // Obtiene tamaño de camino y si utiliza UAL.
+        {
+            std::string val;
+            std::getline(sstream, val, ',');
+
+            std::stringstream convertor(val);
+
+            if(i==0)
+                convertor >> pathSize;
+            else
+                convertor >> *ual;
+        } 
+
+        std::cout << "ual: " << std::to_string(*ual) << std::endl;
 
         //path.reserve(pathSize);  
 
@@ -239,7 +254,7 @@ public:
     //     return YAML::LoadFile(ros::package::getPath("lazy_theta_star") + "/config/config.yaml");
     // }
 
-    std::string RetrieveMapName()
+    static std::string RetrieveMapName()
     {
         return MAP_NAME;
         // YAML::Node node = GetConfig();
@@ -253,7 +268,52 @@ public:
         // return mapName;
     }
 
-private:
-    std::vector<int> mapSize = {0, 0, 0};
+    static void UpdateLaunchFilePos(Vector<int> pos)
+    {
+        std::string launchPath = ros::package::getPath("lazy_theta_star") + "/launch";
 
+        std::ifstream launchFile;
+        std::ofstream newLaunchFile(launchPath + "/new_ual.launch");
+        launchFile.open(launchPath + "/ual.launch");
+        
+        if(!launchFile.is_open())
+        {
+            std::cout << "No se pudo abrir el archivo ual.launch!" << std::endl;
+            exit(-1);
+        }
+
+        const uint8_t initLine = 22;
+        std::string line;
+        
+        for (size_t i = 0; i < initLine - 1; ++i)
+        {
+            std::getline(launchFile, line);
+            newLaunchFile << line << std::endl;
+        }
+        
+        std::getline(launchFile, line);
+        newLaunchFile << "    <arg name=\"initial_x\" default=\"" + std::to_string(pos.x) + "\"/>" << std::endl;
+        std::getline(launchFile, line);
+        newLaunchFile << "    <arg name=\"initial_y\" default=\"" + std::to_string(pos.y) + "\"/>" << std::endl;
+        std::getline(launchFile, line);
+        newLaunchFile << "    <arg name=\"initial_z\" default=\"" + std::to_string(pos.z) + "\"/>" << std::endl;
+
+        while(std::getline(launchFile, line))
+        {
+            newLaunchFile << line << std::endl;
+        }
+
+        launchFile.close();
+        newLaunchFile.close();
+
+        remove((launchPath + "/ual.launch").c_str());
+        rename((launchPath + "/new_ual.launch").c_str(), (launchPath + "/ual.launch").c_str());
+        //remove((launchPath + "/new_ual.launch").c_str());
+    }
+
+private:
+    FilesHandler() {}
+    
 };
+
+//bool FilesHandler::ual = false;

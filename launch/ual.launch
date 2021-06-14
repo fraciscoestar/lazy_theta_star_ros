@@ -18,9 +18,11 @@
     <arg name="position_th" default="0.33"/>
     <arg name="orientation_th" default="0.65"/>
 
-    <arg name="initial_x" default="1"/>
-    <arg name="initial_y" default="1"/>
+<!-- DO NOT CHANGE LINE NUMBER OF THIS THREE ARGS -->
+    <arg name="initial_x" default="2"/>
+    <arg name="initial_y" default="3"/>
     <arg name="initial_z" default="0"/>
+    
 
     <!-- Launch Gazebo simulation TODO: world location? -->
     <node pkg="px4_bringup" type="launch_gzworld.py" name="gazebo_world" output="screen"

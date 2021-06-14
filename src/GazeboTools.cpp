@@ -11,6 +11,8 @@ using namespace std;
 using Vectori = Vector<int>;
 using Vectorf = Vector<float>;
 
+// bool FilesHandler::ual = false;
+
 namespace gazebo
 {
     class GazeboTools : public WorldPlugin
@@ -19,9 +21,10 @@ namespace gazebo
 
         void Load(physics::WorldPtr _parent, sdf::ElementPtr /*_sdf*/)
         {
-            FilesHandler fh;
-            vector<Vectori> obstacles = fh.GetObstaclesFromCSV();
-            vector<Vectori> path = fh.GetPathFromCSV();
+            bool ual;
+            vector<Vectori> obstacles = FilesHandler::GetObstaclesFromCSV();
+            vector<Vectori> path = FilesHandler::GetPathFromCSV(&ual);
+            
 
             //_parent->SetGravity(ignition::math::Vector3d(0,0,0));
             //_parent->EnablePhysicsEngine(false);
@@ -36,10 +39,10 @@ namespace gazebo
 
             for(auto pathPoint : path)
             {
-                // if(pathPoint == path[0]) // Spawn quadrotor at startpoint
-                // {
-                //     SpawnQuadrotor(pathPoint, _parent);
-                // }
+                if(!ual && pathPoint == path[0]) // Spawn quadrotor at startpoint
+                {
+                    SpawnQuadrotor(pathPoint, _parent);
+                }
 
                 // cout << "Creating waypoint at " << pathPoint.x + "X "  << pathPoint.y + "Y "  << pathPoint.z + "Z " << endl;
                 CreateMorph(pathPoint + Vectorf({0.5f, 0.5f, 0.5f}), i, _parent, Vectorf({0.1f,0.3f,0.8f}), "box", {0.25f, 0.25f, 0.25f}, {0.0f,0.1f,0.0f});
