@@ -9,12 +9,11 @@ add_compile_options(-std=c++14)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
-  rospy
-  std_msgs
   nav_msgs
   geometry_msgs
   gazebo_ros
   uav_abstraction_layer
+  ual_backend_gazebo_light
   # message_generation
 )
 
@@ -22,6 +21,8 @@ find_package(catkin REQUIRED COMPONENTS
 # find_package(Boost REQUIRED COMPONENTS system)
 # find_package(yaml-cpp REQUIRED)
 find_package(gazebo_ros REQUIRED)
+find_package(uav_abstraction_layer REQUIRED)
+find_package(ual_backend_gazebo_light REQUIRED)
 
 link_directories(${GAZEBO_LIBRARY_DIRS})
 

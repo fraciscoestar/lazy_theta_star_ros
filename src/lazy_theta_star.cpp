@@ -21,12 +21,17 @@
 #include <tf2_ros/static_transform_broadcaster.h>
 #include <tf2_ros/transform_listener.h>
 
+#include "uav_abstraction_layer/ual.h"
+#include "uav_abstraction_layer/backend.h"
+#include "ual_backend_gazebo_light/ual_backend_gazebo_light.h"
+
 #define FPS 25.0
 
 using namespace std;
 using namespace ros;
+using namespace uav_abstraction_layer;
 
-std::string modelName = "quadrotor";
+std::string modelName = "mbzirc_1";
 std::string uav_home_frame_id;
 geometry_msgs::Pose pose;
 geometry_msgs::PoseStamped ref_pose;
@@ -360,9 +365,12 @@ int main(int argc, char *argv[])
 
     fh.WritePathToCSV(fullPath);
 
-    std::cout << "Presione una tecla para continuar" << std::endl;
-    string s;
-    std::cin >> s;
+    bool ual = 0;
+    std::string strRead;
+    std::cout << "Servicio listo. Utilizar UAL?: " << "y/n" << std::endl;
+    std::cin >> strRead;
+
+    ros::Rate rate(FPS);
 
     ros::Publisher model_state_publisher_ = nh.advertise<gazebo_msgs::ModelState>("/gazebo/set_model_state", 1);
     ros::Subscriber model_state_subscriber_ = nh.subscribe<gazebo_msgs::ModelStates>("/gazebo/model_states", 1, ModelStateCallback);
@@ -370,8 +378,6 @@ int main(int argc, char *argv[])
     // Get frame prefix from namespace
     std::string ns = ros::this_node::getNamespace();
     uav_home_frame_id = ns + "/base_link" + "/odom";
-
-    ros::Rate rate(FPS);
 
     gazebo_msgs::ModelState current;
     current.model_name = modelName;
@@ -383,51 +389,171 @@ int main(int argc, char *argv[])
 
     //gazebo_pose.pose = geometry_msgs::Pose();
     cur_pose.pose = ref_pose.pose;
+    cur_pose.pose.position.z -= 0.5f;
 
-    int i = 0;
-    while (ros::ok()) 
+    if(strRead == "y" || strRead == "Y") // Utilizar servicios de UAL.
     {
-        float dx = abs((float)cur_pose.pose.position.x - (float)fullPath[i].x);
-        float dy = abs((float)cur_pose.pose.position.y - (float)fullPath[i].y);
-        float dz = abs((float)cur_pose.pose.position.z - ((float)fullPath[i].z + 0.5f));
+        ros::ServiceClient goToWaypointClient = nh.serviceClient<uav_abstraction_layer::GoToWaypoint>("ual/go_to_waypoint");
+        ros::ServiceClient takeOffClient = nh.serviceClient<uav_abstraction_layer::TakeOff>("ual/take_off");
+        ros::ServiceClient landClient = nh.serviceClient<uav_abstraction_layer::Land>("ual/land");
+        uav_abstraction_layer::GoToWaypoint goToWaypointService;
+        uav_abstraction_layer::TakeOff takeOffService;
+        uav_abstraction_layer::Land landService;
 
-        if(dx < 0.02f && dy < 0.02f && dz < 0.02f)
+        takeOffService.request.height = 0.5f;
+        takeOffService.request.blocking = true;
+        takeOffClient.call(takeOffService);
+        //sleep(1);
+
+        for (size_t i = 0; i < fullPath.size(); i++)
         {
+            goToWaypointService.request.waypoint.pose.position.x = fullPath[i].x;
+            goToWaypointService.request.waypoint.pose.position.y = fullPath[i].y;
+            goToWaypointService.request.waypoint.pose.position.z = fullPath[i].z + 0.5f;
+
+            double dYaw = atan2(fullPath[i].y - fullPath[i-1].y, fullPath[i].x - fullPath[i-1].x);
+            goToWaypointService.request.waypoint.pose.orientation = EulerToQuaternion(dYaw, 0, 0);
+
+            goToWaypointService.request.blocking = true;       
+            goToWaypointClient.call(goToWaypointService);
             std::cout << "Alcanzado waypoint[" + to_string(i+1) + (string)"/" + to_string(fullPath.size()) + "] " << fullPath[i].x << "X " << fullPath[i].y << "Y " << fullPath[i].z << "Z" << std::endl;
-
-            if(i < fullPath.size()-1)
-            {
-                i++;
-
-                ref_pose.pose.position.x = fullPath[i].x;
-                ref_pose.pose.position.y = fullPath[i].y;
-                ref_pose.pose.position.z = fullPath[i].z + 0.5f; 
-
-                double dYaw = atan2(fullPath[i].y - fullPath[i-1].y, fullPath[i].x - fullPath[i-1].x);
-                ref_pose.pose.orientation = EulerToQuaternion(dYaw, 0, 0);
-            }
-            else
-            {
-                std::cout << "Destino alcanzado." << std::endl;
-                break;
-            }
+            //sleep(1);
         }
 
-        ref_vel = CalculateRefVel(ref_pose);
-        Move();
+        std::cout << "Alcanzado waypoint[" + to_string(fullPath.size()) + (string)"/" + to_string(fullPath.size()) + "] " << fullPath[fullPath.size()-1].x << "X " << fullPath[fullPath.size()-1].y << "Y " << fullPath[fullPath.size()-1].z << "Z" << std::endl;
+        
+        landService.request.blocking = true;
+        landClient.call(landService);
+
+        // int i = 0;
+        // while(ros::ok())
+        // {
+        //     float dx = abs((float)cur_pose.pose.position.x - (float)fullPath[i].x);
+        //     float dy = abs((float)cur_pose.pose.position.y - (float)fullPath[i].y);
+        //     float dz = abs((float)cur_pose.pose.position.z - ((float)fullPath[i].z + 0.5f));
+
+        //     std::cout << dx << "dx " << dy << "dy " << dz << "dz" << std::endl;
+
+        //     if(dx < 0.02f && dy < 0.02f && dz < 0.02f)
+        //     {
+        //         std::cout << "Alcanzado waypoint[" + to_string(i+1) + (string)"/" + to_string(fullPath.size()) + "] " << fullPath[i].x << "X " << fullPath[i].y << "Y " << fullPath[i].z << "Z" << std::endl;
+
+        //         if(i < fullPath.size()-1)
+        //         {
+        //             i++;
+
+        //             goToWaypointService.request.waypoint.pose.position.x = fullPath[i].x;
+        //             goToWaypointService.request.waypoint.pose.position.y = fullPath[i].y;
+        //             goToWaypointService.request.waypoint.pose.position.z = fullPath[i].z + 0.5f;
+
+        //             double dYaw = atan2(fullPath[i].y - fullPath[i-1].y, fullPath[i].x - fullPath[i-1].x);
+        //             goToWaypointService.request.waypoint.pose.orientation = EulerToQuaternion(dYaw, 0, 0);
+
+        //             goToWaypointService.request.blocking = false;
+
+        //             sleep(1);
+        //             goToWaypointClient.call(goToWaypointService);
+        //         }
+        //         else
+        //         {
+        //             std::cout << "Destino alcanzado." << std::endl;
+
+        //             sleep(1);
+        //             landService.request.blocking = false;
+        //             landClient.call(landService);
+
+        //             break;
+        //         }
+        //     }
+
+        //     // current.pose = cur_pose.pose;
+        //     // current.reference_frame = "map";
+        //     // model_state_publisher_.publish(current);
+
+        //     ros::spinOnce;
+        //     rate.sleep();
+        // }
+        
+
+        // grvc::ual::UAL ual(new grvc::ual::BackendGazeboLight());
+
+        // int uav_id;
+        // ros::param::param<int>("~uav_id", uav_id, 1);
+
+        // while (!ual.isReady() && ros::ok()) {
+        //     ROS_WARN("UAL %d not ready!", uav_id);
+        //     sleep(1);
+        // }
+        // ROS_INFO("UAL %d ready!", uav_id);
+
+        // ual.takeOff(0.5); // Despega.
+
+        // grvc::ual::Waypoint wp;
+        // int i = 0;
+
+        // while (ros::ok()) 
+        // {
+        //     if(ual.isIdle())
+        //     {
+        //         i++;
+        //         wp.pose.position.x = fullPath[i].x;
+        //         wp.pose.position.y = fullPath[i].y;
+        //         wp.pose.position.z = fullPath[i].z + 0.5f;
+
+        //         double dYaw = atan2(fullPath[i].y - fullPath[i-1].y, fullPath[i].x - fullPath[i-1].x);
+        //         wp.pose.orientation = EulerToQuaternion(dYaw, 0, 0);
+        //     }
+
+        //     ual.goToWaypoint(wp);
             
-        current.pose = cur_pose.pose;
-        current.reference_frame = "map";
-        model_state_publisher_.publish(current);
-            
-        ros::spinOnce();
-        rate.sleep();
+        //     ros::spinOnce();
+        //     rate.sleep();
+        // }
+    }
+    else
+    {
+        int i = 0;
+        while (ros::ok()) 
+        {
+            float dx = abs((float)cur_pose.pose.position.x - (float)fullPath[i].x);
+            float dy = abs((float)cur_pose.pose.position.y - (float)fullPath[i].y);
+            float dz = abs((float)cur_pose.pose.position.z - ((float)fullPath[i].z + 0.5f));
+
+            if(dx < 0.02f && dy < 0.02f && dz < 0.02f)
+            {
+                std::cout << "Alcanzado waypoint[" + to_string(i+1) + (string)"/" + to_string(fullPath.size()) + "] " << fullPath[i].x << "X " << fullPath[i].y << "Y " << fullPath[i].z << "Z" << std::endl;
+
+                if(i < fullPath.size()-1)
+                {
+                    i++;
+
+                    ref_pose.pose.position.x = fullPath[i].x;
+                    ref_pose.pose.position.y = fullPath[i].y;
+                    ref_pose.pose.position.z = fullPath[i].z + 0.5f; 
+
+                    double dYaw = atan2(fullPath[i].y - fullPath[i-1].y, fullPath[i].x - fullPath[i-1].x);
+                    ref_pose.pose.orientation = EulerToQuaternion(dYaw, 0, 0);
+                }
+                else
+                {
+                    std::cout << "Destino alcanzado." << std::endl;
+                    break;
+                }
+            }
+
+            ref_vel = CalculateRefVel(ref_pose);
+            Move();
+                
+            current.pose = cur_pose.pose;
+            current.reference_frame = "map";
+            model_state_publisher_.publish(current);
+                
+            ros::spinOnce();
+            rate.sleep();
+        }
     }
 
-    std::cout << "Programa terminado." << std::endl;
-
-    ros::spin();
-    
+    std::cout << "Programa terminado." << std::endl;  
     return 0;
 }
 

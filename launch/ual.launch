@@ -1,0 +1,50 @@
+<launch>
+
+    <arg name="multi" default="false"/>
+    <arg name="ns_prefix" default="uav_"/>
+
+    <arg name="ual_server" default="on"/>
+    <arg name="ual_pub_rate" default="30.0"/>
+
+    <arg name="ual_backend" default="light"/>
+    <arg name="pose_frame_id" default="map"/><!-- To publish ual/pose in other frame than local, e.g. map -->
+
+    <arg name="max_horizontal_velocity" default="1.6"/>
+    <arg name="max_vertical_velocity" default="1.2"/>
+    <arg name="max_yaw_rate" default="1.0"/>
+    <arg name="max_position_error" default="0.02"/>
+    <arg name="max_orientation_error" default="0.01"/>
+    <arg name="noise_var" default="0.0"/>
+    <arg name="position_th" default="0.33"/>
+    <arg name="orientation_th" default="0.65"/>
+
+    <arg name="initial_x" default="1"/>
+    <arg name="initial_y" default="1"/>
+    <arg name="initial_z" default="0"/>
+
+    <!-- Launch Gazebo simulation TODO: world location? -->
+    <node pkg="px4_bringup" type="launch_gzworld.py" name="gazebo_world" output="screen"
+    args="-physics=none -world=$(find lazy_theta_star)/worlds/world.world"/>
+
+    <!-- Launch robot id=1 -->
+    <node pkg="px4_bringup" type="spawn_gzmodel.py" name="spawn_gzmodel_1" output="screen"
+        args="-model=mbzirc -id=1 -material=Orange -ual_backend=$(arg ual_backend) -x $(arg initial_x) -y $(arg initial_y) -z $(arg initial_z) -Y 0"/>
+
+    <!-- Launch UAL server for uav id=1 -->
+    <node pkg="ual_backend_gazebo_light" type="ual_backend_gazebo_light_server" name="ual" output="screen" unless="$(arg multi)">
+        <param name="uav_id" value="1"/>
+        <param name="ual_server" value="$(arg ual_server)"/>
+        <param name="ual_pub_rate" value="$(arg ual_pub_rate)"/>
+        <param name="pose_frame_id" value="$(arg pose_frame_id)"/>
+        <param name="max_horizontal_velocity" value="$(arg max_horizontal_velocity)"/>
+        <param name="max_vertical_velocity" value="$(arg max_vertical_velocity)"/>
+        <param name="max_yaw_rate" value="$(arg max_yaw_rate)"/>
+        <param name="max_position_error" value="$(arg max_position_error)"/>
+        <param name="max_orientation_error" value="$(arg max_orientation_error)"/>
+        <param name="noise_var" value="$(arg noise_var)"/>
+        <param name="position_th" value="$(arg position_th)"/>
+        <param name="orientation_th" value="$(arg orientation_th)"/>
+        <rosparam param="home_pose">[0, 0, 0]</rosparam><!-- [x,y,z] -->
+    </node>
+
+</launch>

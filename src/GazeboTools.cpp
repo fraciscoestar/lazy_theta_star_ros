@@ -36,10 +36,10 @@ namespace gazebo
 
             for(auto pathPoint : path)
             {
-                if(pathPoint == path[0]) // Spawn quadrotor at startpoint
-                {
-                    SpawnQuadrotor(pathPoint, _parent);
-                }
+                // if(pathPoint == path[0]) // Spawn quadrotor at startpoint
+                // {
+                //     SpawnQuadrotor(pathPoint, _parent);
+                // }
 
                 // cout << "Creating waypoint at " << pathPoint.x + "X "  << pathPoint.y + "Y "  << pathPoint.z + "Z " << endl;
                 CreateMorph(pathPoint + Vectorf({0.5f, 0.5f, 0.5f}), i, _parent, Vectorf({0.1f,0.3f,0.8f}), "box", {0.25f, 0.25f, 0.25f}, {0.0f,0.1f,0.0f});
